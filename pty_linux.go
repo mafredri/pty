@@ -22,12 +22,16 @@ func open() (pty, tty *os.File, err error) {
 		}
 	}()
 
-	sname, err := ptsname(p)
-	if err != nil {
+	if err = grantpt(p); err != nil {
 		return nil, nil, err
 	}
 
-	if err := unlockpt(p); err != nil {
+	if err = unlockpt(p); err != nil {
+		return nil, nil, err
+	}
+
+	sname, err := ptsname(p)
+	if err != nil {
 		return nil, nil, err
 	}
 
@@ -45,6 +49,11 @@ func ptsname(f *os.File) (string, error) {
 		return "", err
 	}
 	return "/dev/pts/" + strconv.Itoa(int(n)), nil
+}
+
+func grantpt(f *os.File) error {
+	var u _C_int
+	return ioctl(f.Fd(), syscall.TIOCPTYGRANT, uintptr(unsafe.Pointer(&u))) //nolint:gosec // Expected unsafe pointer for Syscall call.
 }
 
 func unlockpt(f *os.File) error {

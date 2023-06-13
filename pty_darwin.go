@@ -23,16 +23,16 @@ func open() (pty, tty *os.File, err error) {
 		}
 	}()
 
+	if err = grantpt(p); err != nil {
+		return nil, nil, err
+	}
+
+	if err = unlockpt(p); err != nil {
+		return nil, nil, err
+	}
+
 	sname, err := ptsname(p)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := grantpt(p); err != nil {
-		return nil, nil, err
-	}
-
-	if err := unlockpt(p); err != nil {
 		return nil, nil, err
 	}
 
